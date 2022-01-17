@@ -84,12 +84,6 @@ class PartialEncoder(Generic[T]):
         pass
 
 
-class PartialsSummarizer:
-    @abstractmethod
-    def summarize(self, partial_encodings: Dict[PartialEncoderName, Any]) -> Any:
-        pass
-
-
 #
 #
 # class SceneEncoder(Generic[T]):
@@ -203,33 +197,39 @@ class DatasetEncoderV2(Generic[T]):
         self,
         dataset: Dataset,
         output_path: str,
-        encoders: List[PartialEncoder[T]],
-        summarizer: PartialsSummarizer,
+        # encoders: List[PartialEncoder[T]],
+        # summarizer: PartialsSummarizer,
     ):
-        self.summarizer = summarizer
-        self._encoders = encoders
+        # self.summarizer = summarizer
+        # self._encoders = encoders
         self._dataset = dataset
         self._output_path = AnyPath(output_path)
 
-    @abstractmethod
-    def encoding_item_generator(self) -> Generator[T, None, None]:
-        pass
+    # @abstractmethod
+    # def encoding_item_generator(self) -> Generator[T, None, None]:
+    #     pass
 
+    @abstractmethod
     def encode_dataset(self):
-        partial_encodings = {e.name: list() for e in self._encoders}
-        for source_item in self.encoding_item_generator():
-            for encoder in self._encoders:
-                partial_encoded = encoder.encode(item=source_item)
-                if partial_encoded is not None:
-                    partial_encodings[encoder.name].append(partial_encoded)
-        self.summarizer.summarize(partial_encodings=partial_encodings)
+        pass
+        # partial_encodings = {e.name: list() for e in self._encoders}
+        # for source_item in self.encoding_item_generator():
+        #     for encoder in self._encoders:
+        #         partial_encoded = encoder.encode(item=source_item)
+        #         if partial_encoded is not None:
+        #             partial_encodings[encoder.name].append(partial_encoded)
+        # self.summarizer.summarize(partial_encodings=partial_encodings)
 
     @classmethod
     def from_dataset(
         cls,
         dataset: Dataset,
         output_path: str,
-        encoders: List[PartialEncoder[T]],
-        summarizer: PartialsSummarizer,
+        # encoders: List[PartialEncoder[T]],
+        # summarizer: PartialsSummarizer,
     ) -> "DatasetEncoderV2[T]":
-        return cls(dataset=dataset, output_path=output_path, encoders=encoders, summarizer=summarizer)
+        return cls(
+            dataset=dataset,
+            output_path=output_path,
+            # encoders=encoders, summarizer=summarizer
+        )

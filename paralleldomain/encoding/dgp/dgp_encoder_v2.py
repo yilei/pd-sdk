@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import Any, Dict, Generator, Iterator, List, Optional, Set, Tuple, Union
 
 import numpy as np
+import pypeln
 
 from paralleldomain.common.dgp.v0.constants import ANNOTATION_TYPE_MAP_INV, DATETIME_FORMAT, POINT_FORMAT, DirectoryName
 from paralleldomain.common.dgp.v0.dtos import (
@@ -126,18 +127,22 @@ class DGPDatasetEncoderV2(DatasetEncoderV2[SensorFrame[datetime]]):
         self,
         dataset: Dataset,
         output_path: str,
-        summarizer: PartialsSummarizer = None,
-        encoders: List[PartialEncoder] = None,
+        # summarizer: PartialsSummarizer = None,
+        # encoders: List[PartialEncoder] = None,
         scene_names: Optional[List[str]] = None,
         set_start: Optional[int] = None,
         set_stop: Optional[int] = None,
     ):
-        if encoders is None:
-            encoders = [DGPCameraEncoder()]
-        if encoders is None:
-            summarizer = DGPSummarizer()
+        # if encoders is None:
+        #     encoders = [DGPCameraEncoder()]
+        # if encoders is None:
+        #     summarizer = DGPSummarizer()
 
-        super().__init__(dataset=dataset, output_path=output_path, encoders=encoders, summarizer=summarizer)
+        super().__init__(
+            dataset=dataset,
+            output_path=output_path,
+            # encoders=encoders, summarizer=summarizer
+        )
 
         if scene_names is not None:
             for sn in scene_names:
@@ -148,10 +153,13 @@ class DGPDatasetEncoderV2(DatasetEncoderV2[SensorFrame[datetime]]):
             set_slice = slice(set_start, set_stop)
             self._scene_names = self._dataset.unordered_scene_names[set_slice]
 
-    def encoding_item_generator(self) -> Generator[SensorFrame[datetime], None, None]:
+    def sensor_frame_generator(self) -> Generator[SensorFrame[datetime], None, None]:
         for scene_name in self._scene_names:
             scene = self._dataset.get_scene(scene_name=scene_name)
             for sensor in scene.sensors:
                 for frame_id in sensor.frame_ids:
                     sensor_frame = sensor.get_frame(frame_id=frame_id)
                     yield sensor_frame
+
+    # def encode_dataset(self):
+    #     source = self.sensor_frame_generator()
