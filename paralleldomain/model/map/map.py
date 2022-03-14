@@ -69,6 +69,11 @@ class MapQueryProtocol(Protocol):
     ) -> List[LaneSegment]:
         pass
 
+    def get_lane_segment_successors_straight_path(
+        self, lane_segment_id: LaneSegmentId, steps: int = None
+    ) -> List[LaneSegment]:
+        pass
+
     def get_lane_segments_connected_shortest_paths(
         self, source_id: LaneSegmentId, target_id: LaneSegmentId
     ) -> List[List[LaneSegment]]:
@@ -126,6 +131,9 @@ class Map:
     def get_lane_segments_from_poses(self, poses: List[Transformation]) -> List[LaneSegment]:
         return self.map_query.get_lane_segments_from_poses(poses=poses)
 
+    def get_lane_segments_for_point(self, point: Point3DGeometry) -> List[LaneSegment]:
+        return self.map_query.get_lane_segments_for_point(point=point)
+
     def pad_lane_segments(self, lane_segments: List[LaneSegment], padding: int = 1) -> List[LaneSegment]:
         lane_segments_predecessors = self.map_query.get_lane_segment_predecessors_random_path(
             lane_segment_id=lane_segments[0].lane_segment_id, steps=padding
@@ -168,6 +176,12 @@ class Map:
     ) -> List[LaneSegment]:
         lane_segment = LaneSegment.ensure_lane_segment_id(item=lane_segment)
         return self.map_query.get_lane_segment_predecessors_random_path(lane_segment_id=lane_segment, steps=steps)
+
+    def get_lane_segment_successors_straight_path(
+        self, lane_segment: Union[LaneSegmentId, LaneSegment], steps: int = None
+    ) -> List[LaneSegment]:
+        lane_segment = LaneSegment.ensure_lane_segment_id(item=lane_segment)
+        return self.map_query.get_lane_segment_successors_straight_path(lane_segment_id=lane_segment, steps=steps)
 
     def bridge_lane_segments(
         self,

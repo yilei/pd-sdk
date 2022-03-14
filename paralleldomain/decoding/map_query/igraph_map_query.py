@@ -9,7 +9,7 @@ from paralleldomain.model.geometry.bounding_box_2d import BoundingBox2DBaseGeome
 from paralleldomain.model.geometry.point_3d import Point3DGeometry
 from paralleldomain.model.map.area import Area
 from paralleldomain.model.map.edge import Edge
-from paralleldomain.model.map.map_components import Junction, LaneSegment, RoadSegment
+from paralleldomain.model.map.map_components import Junction, LaneSegment, RoadSegment, TurnType
 from paralleldomain.model.type_aliases import AreaId, EdgeId, JunctionId, LaneSegmentId, RoadSegmentId
 from paralleldomain.utilities.geometry import is_point_in_polygon_2d
 from paralleldomain.utilities.transformation import Transformation
@@ -256,7 +256,7 @@ class IGraphMapQuery(MapQuery):
         start_vertex = subgraph.vs.find(f"{NodePrefix.LANE_SEGMENT}_{lane_segment_id}")
         random_walk = subgraph.random_walk(
             start=start_vertex.index,
-            steps=steps if steps is not None else (2**16),
+            steps=steps if steps is not None else (2 ** 16),
             mode="in",
             stuck="return",
         )
@@ -269,7 +269,7 @@ class IGraphMapQuery(MapQuery):
         start_vertex = subgraph.vs.find(f"{NodePrefix.LANE_SEGMENT}_{lane_segment_id}")
         random_walk = subgraph.random_walk(
             start=start_vertex.index,
-            steps=steps if steps is not None else (2**16),
+            steps=steps if steps is not None else (2 ** 16),
             mode="out",
             stuck="return",
         )
@@ -284,6 +284,29 @@ class IGraphMapQuery(MapQuery):
 
         shortest_paths = subgraph.get_shortest_paths(v=start_node, to=end_node.index, mode="out")
         return [[subgraph.vs[node_id]["object"] for node_id in shortest_path] for shortest_path in shortest_paths]
+
+    def get_lane_segment_successors_straight_path(
+        self, lane_segment_id: LaneSegmentId, steps: int = None
+    ) -> Tuple[List[LaneSegment], List[int], List[Optional[int]]]:
+        subgraph = self._get_lane_segments_preceeding_lane_segments_graph()
+        start_vertex = subgraph.vs.find(f"{NodePrefix.LANE_SEGMENT}_{lane_segment_id}")
+
+        lane_segment_path = []
+        lane_segment = start_vertex["object"]
+        lane_segment_path.append(lane_segment)
+        for _ in range(steps):
+            found_straight_path = False
+            for successor_id in lane_segment.successor_ids:
+                new_lane_segment = subgraph.vs.find(f"{NodePrefix.LANE_SEGMENT}_{successor_id}")["object"]
+                if new_lane_segment.turn_type == TurnType.STRAIGHT:
+                    lane_segment = new_lane_segment
+                    lane_segment_path.append(lane_segment)
+                    found_straight_path = True
+
+            if not found_straight_path:
+                break
+
+        return lane_segment_path
 
     def get_lane_segments_from_poses(self, poses: List[Transformation]) -> List[LaneSegment]:
         enu_points = [Point3DGeometry.from_numpy(point=pose.translation) for pose in poses]
