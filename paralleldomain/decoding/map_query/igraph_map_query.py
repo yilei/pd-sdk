@@ -110,7 +110,9 @@ class IGraphMapQuery(MapQuery):
                 lane_segment, level, parent_lane_segment = next(bfs_iterator)
                 lane_segments.append(lane_segment["object"])
                 levels.append(level)
-                parent_ids.append(parent_lane_segment["object"].id if parent_lane_segment is not None else None)
+                parent_ids.append(
+                    parent_lane_segment["object"].lane_segment_id if parent_lane_segment is not None else None
+                )
             except StopIteration:
                 break
 
